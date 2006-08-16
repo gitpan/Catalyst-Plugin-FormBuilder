@@ -1,0 +1,26 @@
+
+RCS file: /home/nwiger/perlmod/lib/Catalyst/Plugin/RCS/FormBuilder.pm,v
+Working file: /home/nwiger/perlmod/lib/Catalyst/Plugin/FormBuilder.pm
+head: 1.2
+branch:
+locks: strict
+access list:
+symbolic names:
+keyword substitution: kv
+total revisions: 2;	selected revisions: 2
+description:
+Copyright (c) Nathan Wiger <nate@wiger.org>. All Rights Reserved.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License (GPL) for more details.
+----------------------------
+revision 1.2
+date: 2006/08/16 23:36:44;  author: nwiger;  state: Exp;  lines: +2 -1
+First revision destined for CPAN
+----------------------------
+revision 1.1
+date: 2006/08/16 23:34:22;  author: nwiger;  state: Exp;
+Initial revision
+=============================================================================
