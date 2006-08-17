@@ -54,6 +54,15 @@ DESCRIPTION
     named for the current action url. So, if you were serving "/books/edit",
     this plugin would look for:
 
+        root/forms/books/edit.fb
+
+    (The path is configurable.) If no source file is found, then it is
+    assumed you'll be setting up your fields manually. In your controller,
+    you will have to use the "$c->form" object to create your fields,
+    validation, and so on.
+
+    Here is an example "edit.fb" file:
+
         # Form config file root/forms/books/edit.fb
         name: books_edit
         method: post
@@ -185,8 +194,12 @@ TEMPLATES
     result in a duplicate form (once using the above expansion, and a second
     time using FormBuilder's default rendering).
 
-    You can also read information on FormBuilder's Template Toolkit support
-    at CGI::FormBuilder::Template::TT2.
+    Note that the above form could become a generic "form.tt" template which
+    you simply included in all your files, since there is nothing specific
+    to a given form hardcoded in (that's the idea, after all).
+
+    You can also get some ideas based on FormBuilder's native Template
+    Toolkit support at CGI::FormBuilder::Template::TT2.
 
 CONFIGURATION
     You can set defaults for your forms using Catalyst's config method:
@@ -261,6 +274,8 @@ SEE ALSO
 
 AUTHOR
     Copyright (c) 2006 Nate Wiger <nate@wiger.org>. All Rights Reserved.
+
+    Thanks to Laurent Dami for many good suggestions regarding this plugin.
 
     This library is free software, you can redistribute it and/or modify it
     under the same terms as Perl itself.

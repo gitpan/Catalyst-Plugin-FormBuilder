@@ -38,7 +38,7 @@ Catalyst::Plugin::FormBuilder - Catalyst FormBuilder Plugin
 
 package Catalyst::Plugin::FormBuilder;
 
-our $VERSION = do { my @r=(q$Revision: 1.2 $=~/\d+/g); sprintf "%d."."%02d"x$#r,@r };
+our $VERSION = do { my @r=(q$Revision: 1.3 $=~/\d+/g); sprintf "%d."."%02d"x$#r,@r };
 
 use strict;
 use warnings;
@@ -48,7 +48,6 @@ use NEXT;
 
 # Need a newer version of FormBuilder
 use CGI::FormBuilder 3.0202;
-use Data::Dumper;
 
 # Loads our FormBuilder class in $c->form
 use base 'Class::Accessor::Fast';
@@ -67,7 +66,7 @@ sub prepare {
     # we can see whether it needs a form or not. Throw
     # a fatal error if they specified a form, or ignore
     # it otherwise.
-    return unless exists $c->action->attributes->{Form};
+    return $c unless exists $c->action->attributes->{Form};
     my $name = $c->action->attributes->{Form}[0];
     my $fatal = 1;
     unless ($name) {
@@ -150,6 +149,15 @@ The out-of-the-box setup is to look for a form configuration file that follows
 the L<CGI::FormBuilder::Source::File> format (essentially YAML), named for the
 current action url. So, if you were serving C</books/edit>, this plugin
 would look for:
+
+    root/forms/books/edit.fb
+
+(The path is configurable.) If no source file is found, then it is assumed
+you'll be setting up your fields manually. In your controller, you will
+have to use the C<< $c->form >> object to create your fields, validation,
+and so on.
+
+Here is an example C<edit.fb> file:
 
     # Form config file root/forms/books/edit.fb
     name: books_edit
@@ -283,8 +291,12 @@ In this case, you would B<not> call C<form.render>, since that would
 only result in a duplicate form (once using the above expansion, and
 a second time using FormBuilder's default rendering).
 
-You can also read information on FormBuilder's Template Toolkit support
-at L<CGI::FormBuilder::Template::TT2>.
+Note that the above form could become a generic C<form.tt> template
+which you simply included in all your files, since there is nothing
+specific to a given form hardcoded in (that's the idea, after all).
+
+You can also get some ideas based on FormBuilder's native Template Toolkit
+support at L<CGI::FormBuilder::Template::TT2>.
 
 =head1 CONFIGURATION
 
@@ -373,7 +385,10 @@ L<Catalyst::Manual>, L<Catalyst::Request>, L<Catalyst::Response>
 
 Copyright (c) 2006 Nate Wiger <nate@wiger.org>. All Rights Reserved.
 
+Thanks to Laurent Dami for many good suggestions regarding this plugin.
+
 This library is free software, you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
+
