@@ -11,8 +11,9 @@ SYNOPSIS
         #
         # The simplest example looks for edit.fb to create
         # a form, based on the presence of the ":Form" attribute.
+        # Use Local/Global/Private/etc to scope methods like normal.
         #
-        sub edit : Form {
+        sub edit : Local Form {
             my ($self, $c, @args) = @_;
             $c->form->field(name => 'email', validate => 'EMAIL');
             $c->form->messages('/locale/messages.fr');
@@ -22,8 +23,9 @@ SYNOPSIS
         # This example references edit still, since we are 
         # just switching to a readonly view. The layout will be
         # the same, but fields are rendered as static HTML.
+        # Note that the Catalyst action URL remains /books/view
         #
-        sub view : Form('/books/edit') {
+        sub view : Local Form('/books/edit') {
             my ($self, $c) = @_;
             $c->form->static(1);      # set form to readonly
         }
@@ -44,7 +46,7 @@ DESCRIPTION
     access to a FormBuilder "$c->form" object within that controller method:
 
         # An editing screen for books
-        sub edit : Form {
+        sub edit : Local Form {
             # The file books/edit.fb is loaded automatically
             $c->form->method('post');   # set form method
         }
@@ -100,19 +102,6 @@ DESCRIPTION
     specified fields. Note that the "root/forms" path is configurable; this
     path is used by default to integrate with the "TTSite" helper.
 
-    The FormBuilder methodolody is to handle both rendering and validation
-    of the form. As such, the form will "loop back" onto the same controller
-    method. Within your controller, you would then use the standard
-    FormBuilder submit/validate check:
-
-        if ($c->form->submitted && $c->form->validate) {
-            $c->forward('/books/save');
-        }
-
-    This would forward to "/books/save" if the form was submitted and passed
-    field validation. Otherwise, it would automatically re-render the form
-    with invalid fields highlighted, leaving the database unchanged.
-
     Within your controller, you can call any method that you would on a
     normal "CGI::FormBuilder" object on the "$c->form" object. To manipulate
     the field named "desc", simply call the "field()" method:
@@ -132,16 +121,30 @@ DESCRIPTION
                         );
 
     This would create a select list with the last element as "Other:" to
-    allow the addition of more countries.
+    allow the addition of more countries. See CGI::FormBuilder for methods
+    available to the form object.
 
-    Finally, to render it in your template, you would just use render to get
-    a default table-based form:
+    The FormBuilder methodolody is to handle both rendering and validation
+    of the form. As such, the form will "loop back" onto the same controller
+    method. Within your controller, you would then use the standard
+    FormBuilder submit/validate check:
+
+        if ($c->form->submitted && $c->form->validate) {
+            $c->forward('/books/save');
+        }
+
+    This would forward to "/books/save" if the form was submitted and passed
+    field validation. Otherwise, it would automatically re-render the form
+    with invalid fields highlighted, leaving the database unchanged.
+
+    To render the form in your template, you can use "render" to get a
+    default table-based form:
 
         <!-- root/src/books/edit.tt -->
         [% form.render %]
 
-    You can also get fine-tuned control over your form layout from with your
-    template.
+    You can also get fine-tuned control over your form layout from within
+    your template.
 
 TEMPLATES
     The simplest way to get your form into HTML is to reference the
@@ -241,12 +244,18 @@ CONFIGURATION
 
         The default setting is "$c->req->path".
 
+    cookies
+        Handling these are disabled (use Catalyst).
+
     debug
         This is set to correspond with Catalyst's debug setting.
 
+    header
+        This is disabled. Instead, use Catalyst's header routines.
+
     params
-        This is set to get parameters from Catalyst, using
-        "$c->req->params". To override this, use the "$c->form" object:
+        This is set to get parameters from Catalyst, using "$c->req". To
+        override this, use the "$c->form" object:
 
             $c->form->params(\%param_hashref);
 
@@ -261,7 +270,7 @@ CONFIGURATION
         To override this, include the path as the argument to the method
         attribute:
 
-            sub edit : Form('/books/myEditForm') { }
+            sub edit : Local Form('/books/myEditForm') { }
 
         If no source file is found, then it is assumed you'll be setting up
         your fields manually. In your controller, you will have to use the

@@ -17,8 +17,9 @@ Catalyst::Plugin::FormBuilder - Catalyst FormBuilder Plugin
     #
     # The simplest example looks for edit.fb to create
     # a form, based on the presence of the ":Form" attribute.
+    # Use Local/Global/Private/etc to scope methods like normal.
     #
-    sub edit : Form {
+    sub edit : Local Form {
         my ($self, $c, @args) = @_;
         $c->form->field(name => 'email', validate => 'EMAIL');
         $c->form->messages('/locale/messages.fr');
@@ -28,8 +29,9 @@ Catalyst::Plugin::FormBuilder - Catalyst FormBuilder Plugin
     # This example references edit still, since we are 
     # just switching to a readonly view. The layout will be
     # the same, but fields are rendered as static HTML.
+    # Note that the Catalyst action URL remains /books/view
     #
-    sub view : Form('/books/edit') {
+    sub view : Local Form('/books/edit') {
         my ($self, $c) = @_;
         $c->form->static(1);      # set form to readonly
     }
@@ -38,7 +40,7 @@ Catalyst::Plugin::FormBuilder - Catalyst FormBuilder Plugin
 
 package Catalyst::Plugin::FormBuilder;
 
-our $VERSION = do { my @r=(q$Revision: 1.3 $=~/\d+/g); sprintf "%d."."%02d"x$#r,@r };
+our $VERSION = do { my @r=(q$Revision: 1.4 $=~/\d+/g); sprintf "%d."."%02d"x$#r,@r };
 
 use strict;
 use warnings;
@@ -66,7 +68,7 @@ sub prepare {
     # we can see whether it needs a form or not. Throw
     # a fatal error if they specified a form, or ignore
     # it otherwise.
-    return $c unless exists $c->action->attributes->{Form};
+    return $c unless $c->action && exists $c->action->attributes->{Form};
     my $name = $c->action->attributes->{Form}[0];
     my $fatal = 1;
     unless ($name) {
@@ -78,8 +80,10 @@ sub prepare {
     # Load configured defaults from the user, and add in some
     # custom settings needed to meld FormBuilder with Catalyst
     my $attr = $c->config->{form} || {};
-    $attr->{params} = $c->req->params;
+    $attr->{params} = $c->req;
     $attr->{action} = '/'.$c->req->path;
+    $attr->{header} = 0;    # always disable headers
+    $attr->{cookies} = 0;   # and cookies
 
     # Attempt to autoload config and template files
     # Cleanup suffix to allow ".fb" or "fb" in config
@@ -140,7 +144,7 @@ that you want to associate with a form. This will give you access to a
 FormBuilder C<< $c->form >> object within that controller method:
 
     # An editing screen for books
-    sub edit : Form {
+    sub edit : Local Form {
         # The file books/edit.fb is loaded automatically
         $c->form->method('post');   # set form method
     }
@@ -196,19 +200,6 @@ This will automatically create a complete form for you, using the
 specified fields. Note that the C<root/forms> path is configurable;
 this path is used by default to integrate with the C<TTSite> helper.
 
-The FormBuilder methodolody is to handle both rendering and validation
-of the form. As such, the form will "loop back" onto the same controller
-method. Within your controller, you would then use the standard FormBuilder
-submit/validate check:
-
-    if ($c->form->submitted && $c->form->validate) {
-        $c->forward('/books/save');
-    }
-
-This would forward to C</books/save> if the form was submitted and
-passed field validation. Otherwise, it would automatically re-render the
-form with invalid fields highlighted, leaving the database unchanged.
-
 Within your controller, you can call any method that you would on a
 normal C<CGI::FormBuilder> object on the C<< $c->form >> object.
 To manipulate the field named C<desc>, simply call the C<field()>
@@ -229,15 +220,30 @@ this to iterate through the database:
                     );
 
 This would create a select list with the last element as "Other:" to allow
-the addition of more countries.
+the addition of more countries. See L<CGI::FormBuilder> for methods
+available to the form object.
 
-Finally, to render it in your template, you would just use render to get
-a default table-based form:
+The FormBuilder methodolody is to handle both rendering and validation
+of the form. As such, the form will "loop back" onto the same controller
+method. Within your controller, you would then use the standard FormBuilder
+submit/validate check:
+
+    if ($c->form->submitted && $c->form->validate) {
+        $c->forward('/books/save');
+    }
+
+This would forward to C</books/save> if the form was submitted and
+passed field validation. Otherwise, it would automatically re-render the
+form with invalid fields highlighted, leaving the database unchanged.
+
+To render the form in your template, you can use C<render> to get a
+default table-based form:
 
     <!-- root/src/books/edit.tt -->
     [% form.render %]
 
-You can also get fine-tuned control over your form layout from with your template.
+You can also get fine-tuned control over your form layout from within
+your template.
 
 =head1 TEMPLATES
 
@@ -346,13 +352,21 @@ you want to override this, simply use the C<< $c->form >> object:
 
 The default setting is C<< $c->req->path >>.
 
+=item cookies
+
+Handling these are disabled (use Catalyst).
+
 =item debug
 
 This is set to correspond with Catalyst's debug setting.
 
+=item header
+
+This is disabled. Instead, use Catalyst's header routines.
+
 =item params
 
-This is set to get parameters from Catalyst, using C<< $c->req->params >>.
+This is set to get parameters from Catalyst, using C<< $c->req >>.
 To override this, use the C<< $c->form >> object:
 
     $c->form->params(\%param_hashref);
@@ -368,7 +382,7 @@ source file.
 
 To override this, include the path as the argument to the method attribute:
 
-    sub edit : Form('/books/myEditForm') { }
+    sub edit : Local Form('/books/myEditForm') { }
 
 If no source file is found, then it is assumed you'll be setting up your
 fields manually. In your controller, you will have to use the C<< $c->form >>
