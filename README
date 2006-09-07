@@ -115,7 +115,7 @@ DESCRIPTION
     this to iterate through the database:
 
         $c->form->field(name    => 'country',
-                        options => [ map { $_->id, $_->name }
+                        options => [ map { [$_->id, $_->name] }
                                      $c->model('MyApp::Country')->all ],
                         other   => 1,   # create "Other:" box
                         );

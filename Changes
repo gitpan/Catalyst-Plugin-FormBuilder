@@ -1,13 +1,13 @@
 
 RCS file: /home/nwiger/perlmod/lib/Catalyst/Plugin/RCS/FormBuilder.pm,v
 Working file: /home/nwiger/perlmod/lib/Catalyst/Plugin/FormBuilder.pm
-head: 1.4
+head: 1.5
 branch:
 locks: strict
 access list:
 symbolic names:
 keyword substitution: kv
-total revisions: 4;	selected revisions: 4
+total revisions: 5;	selected revisions: 5
 description:
 Copyright (c) Nathan Wiger <nate@wiger.org>. All Rights Reserved.
 
@@ -15,6 +15,10 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License (GPL) for more details.
+----------------------------
+revision 1.5
+date: 2006/09/07 18:20:46;  author: nwiger;  state: Exp;  lines: +18 -15
+Bug fix for bad hash dereferencing
 ----------------------------
 revision 1.4
 date: 2006/08/25 21:28:25;  author: nwiger;  state: Exp;  lines: +2 -2

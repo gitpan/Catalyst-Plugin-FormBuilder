@@ -40,7 +40,7 @@ Catalyst::Plugin::FormBuilder - Catalyst FormBuilder Plugin
 
 package Catalyst::Plugin::FormBuilder;
 
-our $VERSION = do { my @r=(q$Revision: 1.4 $=~/\d+/g); sprintf "%d."."%02d"x$#r,@r };
+our $VERSION = do { my @r=(q$Revision: 1.5 $=~/\d+/g); sprintf "%d."."%02d"x$#r,@r };
 
 use strict;
 use warnings;
@@ -75,21 +75,24 @@ sub prepare {
         $name = $c->req->path;
         $fatal = 0;
     }
+
+    # remove leading and trailing slashes
     $name =~ s#^/+##;
+    $name =~ s#/+$##;
 
     # Load configured defaults from the user, and add in some
     # custom settings needed to meld FormBuilder with Catalyst
-    my $attr = $c->config->{form} || {};
-    $attr->{params} = $c->req;
-    $attr->{action} = '/'.$c->req->path;
-    $attr->{header} = 0;    # always disable headers
-    $attr->{cookies} = 0;   # and cookies
+    my %attr = %{$c->config->{form} || {}};
+    $attr{params} = $c->req;
+    $attr{action} = '/'.$c->req->path;
+    $attr{header} = 0;    # always disable headers
+    $attr{cookies} = 0;   # and cookies
 
     # Attempt to autoload config and template files
     # Cleanup suffix to allow ".fb" or "fb" in config
-    my $fbdir = $c->config->{form}{form_path}
+    my $fbdir = $attr{form_path}
              || File::Spec->catfile($c->config->{home}, 'root', 'forms');
-    my $fbsuf = $c->config->{form}{form_suffix} || 'fb';
+    my $fbsuf = $attr{form_suffix} || 'fb';
     $fbsuf =~ s/^\.*//;
     $c->log->debug("Form ($name): Looking for form config in $fbdir");
     my $fbfile = "$name.$fbsuf";
@@ -99,13 +102,13 @@ sub prepare {
         my $conf = File::Spec->catfile($dir, $fbfile);
         if (-f $conf && -r _) {
             $c->log->debug("Form ($name): Found form config $conf");
-            $attr->{source} = $conf;
+            $attr{source} = $conf;
         }
     }
 
     # Throw an error if the file was manually specified, or just
     # log a warning message otherwise.
-    unless ($attr->{source}) {
+    unless ($attr{source}) {
         if ($fatal) {
             $c->error("Form ($name): Can't find form config $fbfile in $fbdir: $!");
         } else {
@@ -114,12 +117,12 @@ sub prepare {
     }
 
     # Arg cleanup
-    delete $attr->{form_path};
-    delete $attr->{form_suffix};
+    delete $attr{form_path};
+    delete $attr{form_suffix};
 
     # Create and cache form in main $c context
-    $attr->{debug} = $c->log->is_debug ? 2 : 0;
-    $c->stash->{form} = $c->{form} = CGI::FormBuilder->new($attr);
+    $attr{debug} = $c->log->is_debug ? 2 : 0;
+    $c->stash->{form} = $c->{form} = CGI::FormBuilder->new(\%attr);
 
     return $c;
 }
@@ -214,7 +217,7 @@ To populate field options for C<country>, you might use something like
 this to iterate through the database:
 
     $c->form->field(name    => 'country',
-                    options => [ map { $_->id, $_->name }
+                    options => [ map { [$_->id, $_->name] }
                                  $c->model('MyApp::Country')->all ],
                     other   => 1,   # create "Other:" box
                     );
