@@ -40,7 +40,7 @@ Catalyst::Plugin::FormBuilder - Catalyst FormBuilder Plugin
 
 package Catalyst::Plugin::FormBuilder;
 
-our $VERSION = do { my @r=(q$Revision: 1.5 $=~/\d+/g); sprintf "%d."."%02d"x$#r,@r };
+our $VERSION = do { my @r=(q$Revision: 1.6 $=~/\d+/g); sprintf "%d."."%02d"x$#r,@r };
 
 use strict;
 use warnings;
@@ -72,7 +72,7 @@ sub prepare {
     my $name = $c->action->attributes->{Form}[0];
     my $fatal = 1;
     unless ($name) {
-        $name = $c->req->path;
+        $name = $c->action->reverse;
         $fatal = 0;
     }
 
@@ -84,24 +84,31 @@ sub prepare {
     # custom settings needed to meld FormBuilder with Catalyst
     my %attr = %{$c->config->{form} || {}};
     $attr{params} = $c->req;
-    $attr{action} = '/'.$c->req->path;
+    $attr{action} = $c->req->uri->path;
     $attr{header} = 0;    # always disable headers
     $attr{cookies} = 0;   # and cookies
+    $c->log->debug("Form ($name): Set action to $attr{action}")
+        if $c->debug;
+
+    # Store ourselves as $form->c, to allow \&validate to get $c
+    $attr{c} = $c;
 
     # Attempt to autoload config and template files
     # Cleanup suffix to allow ".fb" or "fb" in config
     my $fbdir = $attr{form_path}
              || File::Spec->catfile($c->config->{home}, 'root', 'forms');
-    my $fbsuf = $attr{form_suffix} || 'fb';
-    $fbsuf =~ s/^\.*//;
-    $c->log->debug("Form ($name): Looking for form config in $fbdir");
-    my $fbfile = "$name.$fbsuf";
+    my $fbsuf = exists($attr{form_suffix}) ? $attr{form_suffix} : 'fb';
+    $fbsuf =~ s/^\.*/./ if $fbsuf;
+    my $fbfile = "$name$fbsuf";
+    $c->log->debug("Form ($name): Looking for config file $fbfile")
+        if $c->debug;
 
     # Look for files relative to our current action url (/books/edit)
     for my $dir (split /\s*:\s*/, $fbdir) {
         my $conf = File::Spec->catfile($dir, $fbfile);
         if (-f $conf && -r _) {
-            $c->log->debug("Form ($name): Found form config $conf");
+            $c->log->debug("Form ($name): Found form config $conf")
+                if $c->debug;
             $attr{source} = $conf;
         }
     }
@@ -110,9 +117,11 @@ sub prepare {
     # log a warning message otherwise.
     unless ($attr{source}) {
         if ($fatal) {
+            $c->log->error("Form ($name): Can't find form config $fbfile in $fbdir: $!");
             $c->error("Form ($name): Can't find form config $fbfile in $fbdir: $!");
         } else {
-            $c->log->warn("Form ($name): Can't access form config $fbfile in $fbdir: $!");
+            $c->log->debug("Form ($name): Can't access form config $fbfile in $fbdir: $!")
+                if $c->debug;
         }
     }
 
@@ -121,7 +130,9 @@ sub prepare {
     delete $attr{form_suffix};
 
     # Create and cache form in main $c context
-    $attr{debug} = $c->log->is_debug ? 2 : 0;
+    $attr{debug} = $c->debug ? 2 : 0;
+    $c->log->debug("Form ($name): Calling FormBuilder->new to create form")
+        if $c->debug;
     $c->stash->{form} = $c->{form} = CGI::FormBuilder->new(\%attr);
 
     return $c;
@@ -402,7 +413,7 @@ L<Catalyst::Manual>, L<Catalyst::Request>, L<Catalyst::Response>
 
 Copyright (c) 2006 Nate Wiger <nate@wiger.org>. All Rights Reserved.
 
-Thanks to Laurent Dami for many good suggestions regarding this plugin.
+Thanks to Laurent Dami and Roy-Magne Mo for suggestions.
 
 This library is free software, you can redistribute it and/or modify
 it under the same terms as Perl itself.

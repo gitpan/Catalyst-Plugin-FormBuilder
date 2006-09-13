@@ -284,7 +284,7 @@ SEE ALSO
 AUTHOR
     Copyright (c) 2006 Nate Wiger <nate@wiger.org>. All Rights Reserved.
 
-    Thanks to Laurent Dami for many good suggestions regarding this plugin.
+    Thanks to Laurent Dami and Roy-Magne Mo for suggestions.
 
     This library is free software, you can redistribute it and/or modify it
     under the same terms as Perl itself.
