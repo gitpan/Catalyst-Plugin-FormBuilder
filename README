@@ -1,7 +1,9 @@
 NAME
-    Catalyst::Plugin::FormBuilder - Catalyst FormBuilder Plugin
+    Catalyst::Plugin::FormBuilder - (DEPRECATED) Catalyst FormBuilder Plugin
 
 SYNOPSIS
+        # Please see Catalyst::Controller::FormBuilder instead
+
         package MyApp;
         use Catalyst qw/FormBuilder/;
 
@@ -29,6 +31,13 @@ SYNOPSIS
             my ($self, $c) = @_;
             $c->form->static(1);      # set form to readonly
         }
+
+DEPRECATION NOTICE
+    This module has been deprecated in favor of
+    Catalyst::Controller::FormBuilder. Please do not use it in new code. It
+    has known compatibility issues and is absolutely not supported by
+    anyone. It remains only in case you have existing code that relies on
+    it.
 
 DESCRIPTION
     This plugin merges the functionality of CGI::FormBuilder with Catalyst

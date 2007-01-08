@@ -4,9 +4,11 @@
 
 =head1 NAME
 
-Catalyst::Plugin::FormBuilder - Catalyst FormBuilder Plugin
+Catalyst::Plugin::FormBuilder - (DEPRECATED) Catalyst FormBuilder Plugin
 
 =head1 SYNOPSIS
+
+    # Please see Catalyst::Controller::FormBuilder instead
 
     package MyApp;
     use Catalyst qw/FormBuilder/;
@@ -40,7 +42,7 @@ Catalyst::Plugin::FormBuilder - Catalyst FormBuilder Plugin
 
 package Catalyst::Plugin::FormBuilder;
 
-our $VERSION = do { my @r=(q$Revision: 1.6 $=~/\d+/g); sprintf "%d."."%02d"x$#r,@r };
+our $VERSION = do { my @r=(q$Revision: 1.7 $=~/\d+/g); sprintf "%d."."%02d"x$#r,@r };
 
 use strict;
 use warnings;
@@ -52,6 +54,7 @@ use NEXT;
 use CGI::FormBuilder 3.0202;
 
 # Loads our FormBuilder class in $c->form
+use Class::Accessor::Fast;
 use base 'Class::Accessor::Fast';
 __PACKAGE__->mk_accessors(qw/form/);
 
@@ -130,7 +133,7 @@ sub prepare {
     delete $attr{form_suffix};
 
     # Create and cache form in main $c context
-    $attr{debug} = $c->debug ? 2 : 0;
+    $attr{debug} = $c->debug ? 2 : 0 unless exists $attr{debug};
     $c->log->debug("Form ($name): Calling FormBuilder->new to create form")
         if $c->debug;
     $c->stash->{form} = $c->{form} = CGI::FormBuilder->new(\%attr);
@@ -141,6 +144,13 @@ sub prepare {
 1;
 
 __END__
+
+=head1 DEPRECATION NOTICE
+
+B<This module has been deprecated in favor of Catalyst::Controller::FormBuilder>.
+Please do not use it in new code. It has known compatibility issues and is absolutely
+not supported by anyone. It remains only in case you have existing code that
+relies on it.
 
 =head1 DESCRIPTION
 
